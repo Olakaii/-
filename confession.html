@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💕</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: background 0.8s;
+  }
+
+  /* — gradient backgrounds per question — */
+  body.bg0 { background: linear-gradient(135deg, #2c2c2c, #1a1a2e); }
+  body.bg1 { background: linear-gradient(135deg, #1a1a2e, #2d1b3d); }
+  body.bg2 { background: linear-gradient(135deg, #2d1b3d, #1b2d2d); }
+  body.bg3 { background: linear-gradient(135deg, #1a1a2e, #3d1b2d); }
+  body.bg4 { background: linear-gradient(135deg, #2d1b3d, #1a1a2e); }
+  body.bg5 { background: linear-gradient(135deg, #1b2d2d, #1a1a2e); }
+  body.bgfinal { background: linear-gradient(135deg, #ff8a80, #ff5252, #f48fb1); }
+
+  .card {
+    text-align: center;
+    padding: 2.5rem 2.5rem;
+    width: min(420px, 90vw);
+    position: relative;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+  }
+
+  .question {
+    font-size: clamp(1.4rem, 5vw, 2rem);
+    font-weight: 900;
+    color: #4a1942;
+    margin-bottom: 0.4rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.5s forwards;
+  }
+
+  .sub {
+    font-size: 0.9rem;
+    color: #8e6a8a;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.5s 0.15s forwards;
+  }
+
+  .btns {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    min-height: 80px;
+    position: relative;
+    opacity: 0;
+    animation: fadeUp 0.5s 0.3s forwards;
+  }
+
+  .btn {
+    padding: 0.85rem 2rem;
+    border: none;
+    border-radius: 50px;
+    font-family: inherit;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .btn-yes {
+    background: linear-gradient(135deg, #e91e63, #f06292);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(233, 30, 99, 0.35);
+  }
+  .btn-yes:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(233, 30, 99, 0.5); }
+  .btn-yes:active { transform: scale(0.97); }
+
+  .btn-no {
+    background: #f5f5f5;
+    color: #999;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    position: relative;
+  }
+
+  /* — dodge styles — */
+  .btn-no.dodge-move { position: absolute; transition: none; }
+  .btn-no.dodge-shrink { transition: transform 0.15s, font-size 0.15s; }
+  .btn-no.dodge-spin { transition: transform 0.4s; }
+  .btn-no.dodge-fade { transition: opacity 0.2s; }
+  .btn-no.dodge-grow-yes { transition: transform 0.3s, opacity 0.3s; }
+
+  .progress {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.4s 0.05s forwards;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(74, 25, 66, 0.15);
+    transition: background 0.3s, transform 0.3s;
+  }
+  .dot.done { background: #e91e63; transform: scale(1.3); }
+
+  /* — final screen — */
+  .final { display: none; text-align: center; }
+  .final.show { display: block; }
+  .final-emoji {
+    font-size: 4rem;
+    animation: pulse 1s infinite;
+  }
+  .final-title {
+    font-size: clamp(1.6rem, 6vw, 2.4rem);
+    font-weight: 900;
+    color: #fff;
+    margin: 0.8rem 0 0.4rem;
+    text-shadow: 0 2px 15px rgba(0,0,0,0.15);
+  }
+  .final-sub {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.85);
+  }
+  .score-bar {
+    margin: 1.5rem auto 0;
+    padding: 1rem 1.5rem;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    color: #fff;
+    font-weight: 700;
+    max-width: 280px;
+  }
+
+  /* — floating hearts — */
+  .heart {
+    position: fixed;
+    font-size: 1.4rem;
+    pointer-events: none;
+    animation: floatUp 3s forwards;
+    z-index: 0;
+  }
+
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+  @keyframes floatUp {
+    0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+    100% { opacity: 0; transform: translateY(-100vh) rotate(45deg); }
+  }
+</style>
+</head>
+<body class="bg0">
+
+<div class="card" id="card">
+  <div class="progress" id="progress"></div>
+  <div class="question" id="question"></div>
+  <div class="sub" id="sub"></div>
+  <div class="btns" id="btns"></div>
+</div>
+
+<div class="final" id="final">
+  <div class="final-emoji">💕</div>
+  <div class="final-title">乖嘛～就知道你想我</div>
+  <div class="final-sub">每一題都逃不掉的呢 😏</div>
+  <div class="score-bar" id="score"></div>
+</div>
+
+<script>
+const QS = [
+  {
+    q: "你今天想我了嗎？",
+    sub: "老實回答喔 🤨",
+    yes: "想了啦",
+    no: "才沒有",
+    dodge: "move",
+    yesReply: "這才乖嘛 💗"
+  },
+  {
+    q: "那你有多想我？",
+    sub: "選一個最真實的",
+    yes: "超——級想",
+    no: "一點點而已",
+    dodge: "shrink",
+    yesReply: "我也超級想你 🥺"
+  },
+  {
+    q: "你現在在笑對不對？",
+    sub: "不要裝了啦",
+    yes: "被你發現了",
+    no: "才沒有笑",
+    dodge: "spin",
+    yesReply: "笑起來最好看了 😊"
+  },
+  {
+    q: "你覺得我可愛嗎？",
+    sub: "認真想一下再回答",
+    yes: "超可愛的好嗎",
+    no: "還好吧",
+    dodge: "fade",
+    yesReply: "你比較可愛啦 ☺️"
+  },
+  {
+    q: "你愛我嗎？",
+    sub: "最後一題了喔 💓",
+    yes: "愛你愛你愛你",
+    no: "讓我想想",
+    dodge: "grow",
+    yesReply: "我更愛你 💕"
+  },
+  {
+    q: "你會一直想著我嗎？",
+    sub: "答對了就放你走～",
+    yes: "一直都會",
+    no: "不一定欸",
+    dodge: "move",
+    yesReply: "那我們說好了喔 🤝💕"
+  }
+];
+
+let current = 0;
+let dodgeCount = 0;
+let noSizes = [];
+
+function renderDots() {
+  const p = document.getElementById("progress");
+  p.innerHTML = QS.map((_, i) =>
+    `<div class="dot ${i < current ? 'done' : ''}"></div>`
+  ).join('');
+}
+
+function showQuestion() {
+  if (current >= QS.length) return showFinal();
+  const data = QS[current];
+  document.body.className = `bg${current}`;
+  renderDots();
+
+  const q = document.getElementById("question");
+  const s = document.getElementById("sub");
+  const b = document.getElementById("btns");
+
+  q.style.animation = 'none'; q.offsetHeight; q.style.animation = 'fadeUp 0.5s forwards';
+  s.style.animation = 'none'; s.offsetHeight; s.style.animation = 'fadeUp 0.5s 0.15s forwards';
+  b.style.animation = 'none'; b.offsetHeight; b.style.animation = 'fadeUp 0.5s 0.3s forwards';
+
+  q.textContent = data.q;
+  s.textContent = data.sub;
+
+  const yesBtn = document.createElement("button");
+  yesBtn.className = "btn btn-yes";
+  yesBtn.textContent = data.yes;
+  yesBtn.onclick = () => onYes(data.yesReply);
+
+  const noBtn = document.createElement("button");
+  noBtn.className = `btn btn-no dodge-${data.dodge}`;
+  noBtn.textContent = data.no;
+
+  b.innerHTML = '';
+  b.appendChild(yesBtn);
+  b.appendChild(noBtn);
+
+  // reset state for shrink dodge
+  noSizes[current] = 1;
+
+  // attach dodge behavior
+  const handler = (e) => { e.preventDefault(); dodgeBehavior(noBtn, data.dodge); };
+  noBtn.addEventListener("pointerenter", handler);
+  noBtn.addEventListener("touchstart", handler, { passive: false });
+}
+
+function dodgeBehavior(btn, type) {
+  dodgeCount++;
+  spawnHeart();
+
+  switch(type) {
+    case "move": {
+      const card = document.getElementById("btns");
+      const rect = card.getBoundingClientRect();
+      const bw = btn.offsetWidth, bh = btn.offsetHeight;
+      const x = Math.random() * (rect.width - bw);
+      const y = Math.random() * (rect.height > 80 ? rect.height - bh : 60);
+      btn.style.left = x + "px";
+      btn.style.top = y + "px";
+      break;
+    }
+    case "shrink": {
+      noSizes[current] *= 0.75;
+      const s = noSizes[current];
+      if (s < 0.15) {
+        btn.style.transform = `scale(0)`;
+        btn.style.pointerEvents = 'none';
+      } else {
+        btn.style.transform = `scale(${s})`;
+      }
+      break;
+    }
+    case "spin": {
+      const deg = (Math.random() > 0.5 ? 1 : -1) * (360 + Math.random() * 360);
+      const tx = (Math.random() - 0.5) * 150;
+      btn.style.transform = `rotate(${deg}deg) translateX(${tx}px)`;
+      setTimeout(() => { btn.style.transform = 'rotate(0) translateX(0)'; }, 500);
+      btn.textContent = ['你騙人！','不信！','再想想？','哼！','🙄'][dodgeCount % 5];
+      break;
+    }
+    case "fade": {
+      btn.style.opacity = '0';
+      setTimeout(() => {
+        btn.style.opacity = '1';
+        const card = document.getElementById("btns");
+        const rect = card.getBoundingClientRect();
+        btn.style.position = 'absolute';
+        btn.style.left = Math.random() * (rect.width - btn.offsetWidth) + 'px';
+        btn.style.top = Math.random() * 40 + 'px';
+      }, 250);
+      break;
+    }
+    case "grow": {
+      // yes button grows bigger each dodge
+      const yesBtn = btn.parentElement.querySelector('.btn-yes');
+      const cur = parseFloat(yesBtn.style.fontSize || '1.05');
+      yesBtn.style.fontSize = (cur + 0.15) + 'rem';
+      yesBtn.style.padding = '1rem 2.5rem';
+      btn.style.transform = `scale(${(noSizes[current] ?? 1) * 0.7})`;
+      noSizes[current] = (noSizes[current] ?? 1) * 0.7;
+      if (noSizes[current] < 0.2) btn.style.pointerEvents = 'none';
+      break;
+    }
+  }
+}
+
+function onYes(reply) {
+  const q = document.getElementById("question");
+  const s = document.getElementById("sub");
+  const b = document.getElementById("btns");
+
+  q.textContent = reply;
+  s.textContent = "";
+  b.innerHTML = "";
+
+  for (let i = 0; i < 6; i++) spawnHeart();
+
+  current++;
+  setTimeout(showQuestion, 1200);
+}
+
+function showFinal() {
+  document.getElementById("card").style.display = "none";
+  document.body.className = "bgfinal";
+  const f = document.getElementById("final");
+  f.classList.add("show");
+  f.style.animation = "fadeUp 0.6s forwards";
+  f.style.opacity = "0";
+  f.style.transform = "translateY(20px)";
+
+  document.getElementById("score").textContent =
+    `你嘗試逃避了 ${dodgeCount} 次\n但最後還是乖乖承認了 😏`;
+
+  // continuous hearts
+  const iv = setInterval(() => spawnHeart(), 300);
+  setTimeout(() => clearInterval(iv), 8000);
+}
+
+function spawnHeart() {
+  const el = document.createElement("div");
+  el.className = "heart";
+  el.textContent = ["💗","💕","💖","🩷","♥️","😘"][Math.floor(Math.random()*6)];
+  el.style.left = Math.random() * 100 + "vw";
+  el.style.bottom = "-2rem";
+  el.style.fontSize = (1 + Math.random()) + "rem";
+  el.style.animationDuration = (2 + Math.random() * 2) + "s";
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+showQuestion();
+</script>
+</body>
+</html>
