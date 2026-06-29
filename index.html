@@ -2,395 +2,321 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>💕</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    font-family: 'Noto Sans TC', sans-serif;
-    min-height: 100dvh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    transition: background 0.8s;
+  :root { --bg: #111; --modal: #fff; --accent: #f06292; }
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100%; margin: 0;
+    font-family: 'Arial', 'Noto Sans TC', sans-serif;
+    background: linear-gradient(180deg, #222, #111);
+    color: #111;
   }
 
-  /* — gradient backgrounds per question — */
-  body.bg0 { background: linear-gradient(135deg, #2c2c2c, #1a1a2e); }
-  body.bg1 { background: linear-gradient(135deg, #1a1a2e, #2d1b3d); }
-  body.bg2 { background: linear-gradient(135deg, #2d1b3d, #1b2d2d); }
-  body.bg3 { background: linear-gradient(135deg, #1a1a2e, #3d1b2d); }
-  body.bg4 { background: linear-gradient(135deg, #2d1b3d, #1a1a2e); }
-  body.bg5 { background: linear-gradient(135deg, #1b2d2d, #1a1a2e); }
-  body.bgfinal { background: linear-gradient(135deg, #ff8a80, #ff5252, #f48fb1); }
-
-  .card {
+  /* modal */
+  .modal {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dialog {
+    background: var(--modal);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.5);
     text-align: center;
-    padding: 2.5rem 2.5rem;
-    width: min(420px, 90vw);
-    position: relative;
-    background: #fff;
-    border-radius: 20px;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+    max-width: 90%;
+    transition: opacity .3s;
   }
+  .dialog.fade { opacity: 0; }
+  .dialog h2 { margin: 0 0 6px; font-size: 22px; }
+  .dialog .hint { font-size: 13px; color: #bbb; margin-bottom: 18px; }
+  .dialog .reply { font-size: 20px; font-weight: 700; color: var(--accent); padding: 18px 0; }
 
-  .question {
-    font-size: clamp(1.4rem, 5vw, 2rem);
-    font-weight: 900;
-    color: #4a1942;
-    margin-bottom: 0.4rem;
-    opacity: 0;
-    transform: translateY(20px);
-    animation: fadeUp 0.5s forwards;
+  /* dots */
+  .dots { display: flex; gap: 5px; justify-content: center; margin-bottom: 14px; }
+  .dots span { width: 7px; height: 7px; border-radius: 50%; background: #e0e0e0; display: inline-block; }
+  .dots span.on { background: var(--accent); }
+
+  /* buttons */
+  .buttons {
+    position: relative; height: 56px;
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px;
   }
-
-  .sub {
-    font-size: 0.9rem;
-    color: #8e6a8a;
-    margin-bottom: 2rem;
-    opacity: 0;
-    animation: fadeUp 0.5s 0.15s forwards;
-  }
-
-  .btns {
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-    min-height: 80px;
-    position: relative;
-    opacity: 0;
-    animation: fadeUp 0.5s 0.3s forwards;
-  }
-
   .btn {
-    padding: 0.85rem 2rem;
-    border: none;
-    border-radius: 50px;
-    font-family: inherit;
-    font-size: 1.05rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
+    padding: 10px 20px; border-radius: 8px; border: 0;
+    cursor: pointer; font-size: 16px; font-weight: 700;
   }
+  .agree { background: var(--accent); color: #fff; }
+  .disagree {
+    background: #ddd; color: #333;
+    position: fixed; margin: 0; z-index: 9999;
+  }
+  .disagree:disabled { pointer-events: none; opacity: .98; }
 
-  .btn-yes {
-    background: linear-gradient(135deg, #e91e63, #f06292);
+  .hidden { display: none; }
+
+  /* congrats */
+  .congrats {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    background: linear-gradient(180deg, rgba(0,0,0,.6), rgba(0,0,0,.8));
     color: #fff;
-    box-shadow: 0 4px 20px rgba(233, 30, 99, 0.35);
   }
-  .btn-yes:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(233, 30, 99, 0.5); }
-  .btn-yes:active { transform: scale(0.97); }
-
-  .btn-no {
-    background: #f5f5f5;
-    color: #999;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    position: relative;
+  .congrats.hidden { display: none !important; }
+  .congrats h1 {
+    font-size: 72px; margin: 0 0 10px;
+    text-shadow: 0 4px 16px rgba(0,0,0,.6);
+    z-index: 1;
   }
-
-  /* — dodge styles — */
-  .btn-no.dodge-move { position: absolute; transition: none; }
-  .btn-no.dodge-shrink { transition: transform 0.15s, font-size 0.15s; }
-  .btn-no.dodge-spin { transition: transform 0.4s; }
-  .btn-no.dodge-fade { transition: opacity 0.2s; }
-  .btn-no.dodge-grow-yes { transition: transform 0.3s, opacity 0.3s; }
-
-  .progress {
-    display: flex;
-    gap: 6px;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-    opacity: 0;
-    animation: fadeUp 0.4s 0.05s forwards;
+  .congrats p {
+    font-size: 16px; opacity: .8; z-index: 1;
   }
-  .dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: rgba(74, 25, 66, 0.15);
-    transition: background 0.3s, transform 0.3s;
+  .congrats .tag {
+    margin-top: 12px; padding: 8px 16px;
+    background: rgba(255,255,255,.15);
+    border-radius: 8px; font-weight: 700;
+    font-size: 14px; z-index: 1;
   }
-  .dot.done { background: #e91e63; transform: scale(1.3); }
-
-  /* — final screen — */
-  .final { display: none; text-align: center; }
-  .final.show { display: block; }
-  .final-emoji {
-    font-size: 4rem;
-    animation: pulse 1s infinite;
-  }
-  .final-title {
-    font-size: clamp(1.6rem, 6vw, 2.4rem);
-    font-weight: 900;
-    color: #fff;
-    margin: 0.8rem 0 0.4rem;
-    text-shadow: 0 2px 15px rgba(0,0,0,0.15);
-  }
-  .final-sub {
-    font-size: 1rem;
-    color: rgba(255,255,255,0.85);
-  }
-  .score-bar {
-    margin: 1.5rem auto 0;
-    padding: 1rem 1.5rem;
-    background: rgba(255,255,255,0.2);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    color: #fff;
-    font-weight: 700;
-    max-width: 280px;
+  #fireworks {
+    position: absolute; inset: 0;
+    display: block; width: 100%; height: 100%;
   }
 
-  /* — floating hearts — */
-  .heart {
-    position: fixed;
-    font-size: 1.4rem;
-    pointer-events: none;
-    animation: floatUp 3s forwards;
-    z-index: 0;
-  }
-
-  @keyframes fadeUp {
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.15); }
-  }
-  @keyframes floatUp {
-    0% { opacity: 1; transform: translateY(0) rotate(0deg); }
-    100% { opacity: 0; transform: translateY(-100vh) rotate(45deg); }
+  @media (max-width: 420px) {
+    .dialog { padding: 20px; }
+    .dialog h2 { font-size: 19px; }
+    .congrats h1 { font-size: 48px; }
   }
 </style>
 </head>
-<body class="bg0">
+<body>
 
-<div class="card" id="card">
-  <div class="progress" id="progress"></div>
-  <div class="question" id="question"></div>
-  <div class="sub" id="sub"></div>
-  <div class="btns" id="btns"></div>
+<div class="modal" id="modal">
+  <div class="dialog" id="dialog"></div>
 </div>
 
-<div class="final" id="final">
-  <div class="final-emoji">💕</div>
-  <div class="final-title">乖嘛～就知道你想我</div>
-  <div class="final-sub">每一題都逃不掉的呢 😏</div>
-  <div class="score-bar" id="score"></div>
+<div class="congrats hidden" id="congrats">
+  <h1>💕Hehehe💕</h1>
+  <p>就知道妳想kaikai～每一題都逃不掉呢 😏</p>
+  <div class="tag" id="tag"></div>
+  <canvas id="fireworks"></canvas>
 </div>
 
 <script>
 const QS = [
-  {
-    q: "你今天想我了嗎？",
-    sub: "老實回答喔 🤨",
-    yes: "想了啦",
-    no: "才沒有",
-    dodge: "move",
-    yesReply: "這才乖嘛 💗"
-  },
-  {
-    q: "那你有多想我？",
-    sub: "選一個最真實的",
-    yes: "超——級想",
-    no: "一點點而已",
-    dodge: "shrink",
-    yesReply: "我也超級想你 🥺"
-  },
-  {
-    q: "你現在在笑對不對？",
-    sub: "不要裝了啦",
-    yes: "被你發現了",
-    no: "才沒有笑",
-    dodge: "spin",
-    yesReply: "笑起來最好看了 😊"
-  },
-  {
-    q: "你覺得我可愛嗎？",
-    sub: "認真想一下再回答",
-    yes: "超可愛的好嗎",
-    no: "還好吧",
-    dodge: "fade",
-    yesReply: "你比較可愛啦 ☺️"
-  },
-  {
-    q: "你愛我嗎？",
-    sub: "最後一題了喔 💓",
-    yes: "愛你愛你愛你",
-    no: "讓我想想",
-    dodge: "grow",
-    yesReply: "我更愛你 💕"
-  },
-  {
-    q: "你會一直想著我嗎？",
-    sub: "答對了就放你走～",
-    yes: "一直都會",
-    no: "不一定欸",
-    dodge: "move",
-    yesReply: "那我們說好了喔 🤝💕"
-  }
+  { q:"Baby 妳今天想kaikai了嗎？", h:"老實回答喔 🤨", y:"想了啦", n:"才沒有", r:"這才乖嘛 💗" },
+  { q:"那妳有多想kaikai？", h:"選一個最真實的", y:"超級想!", n:"一點點而已", r:"kaikai也超級想妳 🥺" },
+  { q:"妳現在在笑對不對？", h:"不要裝了啦", y:"被你發現了", n:"才沒有笑", r:"笑起來最好看了 😊" },
+  { q:"妳覺得kaikai可愛嗎？", h:"認真想一下再回答", y:"超可愛的好嗎", n:"還好吧", r:"Baby比較可愛啦 ☺️" },
+  { q:"妳愛kaikai嗎？", h:"這題很重要喔 💓", y:"愛妳愛妳愛妳", n:"讓我想想", r:"kaikai也愛妳 💕" },
+  { q:"妳會一直想著kaikai嗎？", h:"答對了就放妳走～", y:"一直都會", n:"不一定欸", r:"那我們說好了喔 💕" }
 ];
 
-let current = 0;
-let dodgeCount = 0;
-let noSizes = [];
+let cur = 0, escaped = 0;
+const dialog = document.getElementById("dialog");
+const modalEl = document.getElementById("modal");
 
-function renderDots() {
-  const p = document.getElementById("progress");
-  p.innerHTML = QS.map((_, i) =>
-    `<div class="dot ${i < current ? 'done' : ''}"></div>`
-  ).join('');
+/* ── smooth dodge state ── */
+const CM = 96 / 2.54;
+const KEEP_DIST = 5 * CM;
+let btnOrigX = null, btnOrigY = null;
+let currentTX = 0, currentTY = 0;
+let targetTX = 0, targetTY = 0;
+let mouseX = -9999, mouseY = -9999;
+let noBtn = null;
+let yesBtn = null;
+
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+function resetDodge() {
+  btnOrigX = null; btnOrigY = null;
+  currentTX = 0; currentTY = 0;
+  targetTX = 0; targetTY = 0;
 }
 
-function showQuestion() {
-  if (current >= QS.length) return showFinal();
-  const data = QS[current];
-  document.body.className = `bg${current}`;
-  renderDots();
+function computeTarget() {
+  if (!noBtn) return;
+  const btnRect = noBtn.getBoundingClientRect();
 
-  const q = document.getElementById("question");
-  const s = document.getElementById("sub");
-  const b = document.getElementById("btns");
+  if (btnOrigX === null) {
+    const agreeRect = yesBtn.getBoundingClientRect();
+    const gap = 12;
+    btnOrigX = Math.round(agreeRect.right + gap);
+    btnOrigY = Math.round(agreeRect.top);
+    btnOrigX = clamp(btnOrigX, 0, window.innerWidth - btnRect.width);
+    btnOrigY = clamp(btnOrigY, 0, window.innerHeight - btnRect.height);
+    noBtn.style.left = btnOrigX + 'px';
+    noBtn.style.top = btnOrigY + 'px';
+    noBtn.style.position = 'fixed';
+    noBtn.style.margin = '0';
+    currentTX = 0; currentTY = 0; targetTX = 0; targetTY = 0;
+  }
 
-  q.style.animation = 'none'; q.offsetHeight; q.style.animation = 'fadeUp 0.5s forwards';
-  s.style.animation = 'none'; s.offsetHeight; s.style.animation = 'fadeUp 0.5s 0.15s forwards';
-  b.style.animation = 'none'; b.offsetHeight; b.style.animation = 'fadeUp 0.5s 0.3s forwards';
+  const mx = mouseX, my = mouseY;
+  const currCX = btnOrigX + currentTX + btnRect.width / 2;
+  const currCY = btnOrigY + currentTY + btnRect.height / 2;
+  const vx = currCX - mx, vy = currCY - my;
+  const dist = Math.hypot(vx, vy);
 
-  q.textContent = data.q;
-  s.textContent = data.sub;
-
-  const yesBtn = document.createElement("button");
-  yesBtn.className = "btn btn-yes";
-  yesBtn.textContent = data.yes;
-  yesBtn.onclick = () => onYes(data.yesReply);
-
-  const noBtn = document.createElement("button");
-  noBtn.className = `btn btn-no dodge-${data.dodge}`;
-  noBtn.textContent = data.no;
-
-  b.innerHTML = '';
-  b.appendChild(yesBtn);
-  b.appendChild(noBtn);
-
-  // reset state for shrink dodge
-  noSizes[current] = 1;
-
-  // attach dodge behavior
-  const handler = (e) => { e.preventDefault(); dodgeBehavior(noBtn, data.dodge); };
-  noBtn.addEventListener("pointerenter", handler);
-  noBtn.addEventListener("touchstart", handler, { passive: false });
-}
-
-function dodgeBehavior(btn, type) {
-  dodgeCount++;
-  spawnHeart();
-
-  switch(type) {
-    case "move": {
-      const card = document.getElementById("btns");
-      const rect = card.getBoundingClientRect();
-      const bw = btn.offsetWidth, bh = btn.offsetHeight;
-      const x = Math.random() * (rect.width - bw);
-      const y = Math.random() * (rect.height > 80 ? rect.height - bh : 60);
-      btn.style.left = x + "px";
-      btn.style.top = y + "px";
-      break;
+  if (dist < KEEP_DIST) {
+    escaped++;
+    let ux, uy;
+    if (dist === 0) {
+      const a = Math.random() * Math.PI * 2;
+      ux = Math.cos(a); uy = Math.sin(a);
+    } else {
+      ux = vx / dist; uy = vy / dist;
     }
-    case "shrink": {
-      noSizes[current] *= 0.75;
-      const s = noSizes[current];
-      if (s < 0.15) {
-        btn.style.transform = `scale(0)`;
-        btn.style.pointerEvents = 'none';
-      } else {
-        btn.style.transform = `scale(${s})`;
-      }
-      break;
-    }
-    case "spin": {
-      const deg = (Math.random() > 0.5 ? 1 : -1) * (360 + Math.random() * 360);
-      const tx = (Math.random() - 0.5) * 150;
-      btn.style.transform = `rotate(${deg}deg) translateX(${tx}px)`;
-      setTimeout(() => { btn.style.transform = 'rotate(0) translateX(0)'; }, 500);
-      btn.textContent = ['你騙人！','不信！','再想想？','哼！','🙄'][dodgeCount % 5];
-      break;
-    }
-    case "fade": {
-      btn.style.opacity = '0';
-      setTimeout(() => {
-        btn.style.opacity = '1';
-        const card = document.getElementById("btns");
-        const rect = card.getBoundingClientRect();
-        btn.style.position = 'absolute';
-        btn.style.left = Math.random() * (rect.width - btn.offsetWidth) + 'px';
-        btn.style.top = Math.random() * 40 + 'px';
-      }, 250);
-      break;
-    }
-    case "grow": {
-      // yes button grows bigger each dodge
-      const yesBtn = btn.parentElement.querySelector('.btn-yes');
-      const cur = parseFloat(yesBtn.style.fontSize || '1.05');
-      yesBtn.style.fontSize = (cur + 0.15) + 'rem';
-      yesBtn.style.padding = '1rem 2.5rem';
-      btn.style.transform = `scale(${(noSizes[current] ?? 1) * 0.7})`;
-      noSizes[current] = (noSizes[current] ?? 1) * 0.7;
-      if (noSizes[current] < 0.2) btn.style.pointerEvents = 'none';
-      break;
-    }
+    const desiredCX = mx + ux * KEEP_DIST;
+    const desiredCY = my + uy * KEEP_DIST;
+    let dL = desiredCX - btnRect.width / 2;
+    let dT = desiredCY - btnRect.height / 2;
+    dL = clamp(dL, 0, window.innerWidth - btnRect.width);
+    dT = clamp(dT, 0, window.innerHeight - btnRect.height);
+    targetTX = dL - btnOrigX;
+    targetTY = dT - btnOrigY;
+  } else {
+    targetTX = 0;
+    targetTY = 0;
   }
 }
 
-function onYes(reply) {
-  const q = document.getElementById("question");
-  const s = document.getElementById("sub");
-  const b = document.getElementById("btns");
+window.addEventListener('mousemove', (e) => {
+  mouseX = e.clientX; mouseY = e.clientY;
+  computeTarget();
+});
 
-  q.textContent = reply;
-  s.textContent = "";
-  b.innerHTML = "";
+/* touch support */
+window.addEventListener('touchmove', (e) => {
+  mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY;
+  computeTarget();
+}, { passive: true });
+window.addEventListener('touchstart', (e) => {
+  mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY;
+  computeTarget();
+}, { passive: true });
 
-  for (let i = 0; i < 6; i++) spawnHeart();
+/* smooth animation loop */
+(function animate() {
+  const ease = 0.14;
+  currentTX += (targetTX - currentTX) * ease;
+  currentTY += (targetTY - currentTY) * ease;
+  if (Math.abs(targetTX - currentTX) < 0.3) currentTX = targetTX;
+  if (Math.abs(targetTY - currentTY) < 0.3) currentTY = targetTY;
+  if (noBtn) noBtn.style.transform = `translate(${currentTX}px, ${currentTY}px)`;
+  requestAnimationFrame(animate);
+})();
 
-  current++;
-  setTimeout(showQuestion, 1200);
+/* ── dots html ── */
+function dots(filled) {
+  return `<div class="dots">${QS.map((_, i) => `<span class="${i < filled ? 'on' : ''}"></span>`).join('')}</div>`;
 }
 
-function showFinal() {
-  document.getElementById("card").style.display = "none";
-  document.body.className = "bgfinal";
-  const f = document.getElementById("final");
-  f.classList.add("show");
-  f.style.animation = "fadeUp 0.6s forwards";
-  f.style.opacity = "0";
-  f.style.transform = "translateY(20px)";
+/* ── render question ── */
+function render() {
+  if (cur >= QS.length) return finish();
+  const d = QS[cur];
+  resetDodge();
 
-  document.getElementById("score").textContent =
-    `你嘗試逃避了 ${dodgeCount} 次\n但最後還是乖乖承認了 😏`;
+  dialog.classList.add("fade");
+  setTimeout(() => {
+    dialog.innerHTML = `
+      ${dots(cur)}
+      <h2>${d.q}</h2>
+      <div class="hint">${d.h}</div>
+      <div class="buttons">
+        <button class="btn agree" id="yesBtn">${d.y}</button>
+        <button class="btn disagree" id="noBtn" disabled tabindex="-1">${d.n}</button>
+      </div>`;
+    dialog.classList.remove("fade");
 
-  // continuous hearts
-  const iv = setInterval(() => spawnHeart(), 300);
-  setTimeout(() => clearInterval(iv), 8000);
+    yesBtn = document.getElementById("yesBtn");
+    noBtn = document.getElementById("noBtn");
+
+    noBtn.addEventListener('click', (e) => e.preventDefault());
+
+    yesBtn.onclick = () => {
+      // hide noBtn immediately
+      noBtn.style.display = 'none';
+      noBtn = null;
+
+      dialog.classList.add("fade");
+      setTimeout(() => {
+        dialog.innerHTML = `${dots(cur + 1)}<div class="reply">${d.r}</div>`;
+        dialog.classList.remove("fade");
+        cur++;
+        setTimeout(render, 1000);
+      }, 300);
+    };
+
+    // trigger initial position calc
+    setTimeout(() => computeTarget(), 50);
+  }, cur === 0 ? 50 : 320);
 }
 
-function spawnHeart() {
-  const el = document.createElement("div");
-  el.className = "heart";
-  el.textContent = ["💗","💕","💖","🩷","♥️","😘"][Math.floor(Math.random()*6)];
-  el.style.left = Math.random() * 100 + "vw";
-  el.style.bottom = "-2rem";
-  el.style.fontSize = (1 + Math.random()) + "rem";
-  el.style.animationDuration = (2 + Math.random() * 2) + "s";
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 4000);
+/* ── final ── */
+function finish() {
+  modalEl.classList.add("hidden");
+  const cg = document.getElementById("congrats");
+  cg.classList.remove("hidden");
+  document.getElementById("tag").textContent =
+    `妳嘗試逃避了 ${escaped} 次，但最後還是承認了 😏`;
+  startFireworks();
 }
 
-showQuestion();
+/* ── fireworks ── */
+function startFireworks() {
+  const canvas = document.getElementById("fireworks");
+  const ctx = canvas.getContext("2d");
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener("resize", resize);
+
+  const particles = [];
+  function random(a, b) { return a + Math.random() * (b - a); }
+
+  function launch(x, y) {
+    const hue = Math.floor(random(0, 360));
+    for (let i = 0; i < 120; i++) {
+      const speed = random(1, 6);
+      const angle = random(0, Math.PI * 2);
+      particles.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: random(60, 120),
+        hue, alpha: 1
+      });
+    }
+  }
+
+  let frames = 0;
+  function loop() {
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx; p.y += p.vy; p.vy += 0.04;
+      p.life--; p.alpha *= 0.997;
+      if (p.life <= 0 || p.alpha < 0.02) { particles.splice(i, 1); continue; }
+      ctx.beginPath();
+      ctx.fillStyle = `hsla(${p.hue},90%,60%,${p.alpha})`;
+      ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    frames++;
+    if (frames % 30 === 0) {
+      launch(random(100, canvas.width - 100), random(100, canvas.height / 2));
+    }
+    if (frames < 600 || particles.length > 0) requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+render();
 </script>
 </body>
 </html>
