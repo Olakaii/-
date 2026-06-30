@@ -13,8 +13,6 @@
     background: url('bg.jpg') center bottom/cover no-repeat fixed #0a0a12;
     color: #111;
   }
-
-  /* start screen */
   .start-screen {
     position: fixed; inset: 0;
     display: flex; align-items: center; justify-content: flex-end;
@@ -25,20 +23,9 @@
   }
   .start-screen.hidden { display: none; }
   .start-icon { font-size: 48px; animation: bounce 1.5s infinite; }
-  .start-text {
-    font-size: 18px; opacity: .9;
-    text-shadow: 0 2px 12px rgba(0,0,0,.7);
-  }
-  .start-hint {
-    font-size: 13px; opacity: .6;
-    text-shadow: 0 1px 8px rgba(0,0,0,.7);
-  }
-  @keyframes bounce {
-    0%,100% { transform: translateY(0); }
-    50% { transform: translateY(-12px); }
-  }
-
-  /* modal */
+  .start-text { font-size: 18px; opacity: .9; text-shadow: 0 2px 12px rgba(0,0,0,.7); }
+  .start-hint { font-size: 13px; opacity: .6; text-shadow: 0 1px 8px rgba(0,0,0,.7); }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
   .modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
   .modal.hidden { display: none; }
   .dialog {
@@ -51,50 +38,23 @@
   .dialog h2 { margin: 0 0 6px; font-size: 21px; }
   .dialog .hint { font-size: 13px; color: #bbb; margin-bottom: 20px; }
   .dialog .reply { font-size: 20px; font-weight: 700; color: var(--accent); padding: 18px 0; }
-
   .dots { display: flex; gap: 5px; justify-content: center; margin-bottom: 14px; }
   .dots span { width: 7px; height: 7px; border-radius: 50%; background: #e0e0e0; display: inline-block; }
   .dots span.on { background: var(--accent); }
-
-  .buttons {
-    display: flex; align-items: center; justify-content: center;
-    gap: 24px; padding: 8px 0;
-  }
-  .btn {
-    padding: 10px 24px; border-radius: 8px; border: 0;
-    cursor: pointer; font-size: 16px; font-weight: 700;
-    white-space: nowrap; font-family: inherit;
-  }
+  .buttons { display: flex; align-items: center; justify-content: center; gap: 24px; padding: 8px 0; }
+  .btn { padding: 10px 24px; border-radius: 8px; border: 0; cursor: pointer; font-size: 16px; font-weight: 700; white-space: nowrap; font-family: inherit; }
   .agree { background: var(--accent); color: #fff; }
   .disagree { background: #ddd; color: #333; }
   .disagree:disabled { pointer-events: none; opacity: .98; }
-
   .hidden { display: none; }
-
-  .congrats {
-    position: fixed; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    flex-direction: column;
-    background: linear-gradient(180deg, rgba(0,0,0,.6), rgba(0,0,0,.8));
-    color: #fff;
-  }
+  .congrats { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; background: linear-gradient(180deg, rgba(0,0,0,.6), rgba(0,0,0,.8)); color: #fff; }
   .congrats.hidden { display: none !important; }
   .congrats .sticker { width: 160px; z-index: 1; margin-bottom: 10px; }
   .congrats h1 { font-size: 56px; margin: 0 0 10px; text-shadow: 0 4px 16px rgba(0,0,0,.6); z-index: 1; }
   .congrats p { font-size: 16px; opacity: .8; z-index: 1; }
-  .congrats .tag {
-    margin-top: 12px; padding: 8px 16px;
-    background: rgba(255,255,255,.15);
-    border-radius: 8px; font-weight: 700; font-size: 14px; z-index: 1;
-  }
+  .congrats .tag { margin-top: 12px; padding: 8px 16px; background: rgba(255,255,255,.15); border-radius: 8px; font-weight: 700; font-size: 14px; z-index: 1; }
   #fireworks { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
-
-  @media (max-width: 420px) {
-    .dialog { padding: 20px 22px; min-width: 85vw; }
-    .dialog h2 { font-size: 18px; }
-    .congrats h1 { font-size: 36px; }
-    .congrats .sticker { width: 120px; }
-  }
+  @media (max-width: 420px) { .dialog { padding: 20px 22px; min-width: 85vw; } .dialog h2 { font-size: 18px; } .congrats h1 { font-size: 36px; } .congrats .sticker { width: 120px; } }
 </style>
 </head>
 <body>
@@ -143,6 +103,7 @@ const dialog = document.getElementById("dialog");
 const modalEl = document.getElementById("modal");
 
 const CM = 96/2.54, KEEP_DIST = 5*CM;
+const AVOID_MARGIN = 30; // 跟 yes 按鈕保持的最小距離 px
 let btnOrigX=null, btnOrigY=null;
 let currentTX=0, currentTY=0, targetTX=0, targetTY=0;
 let mouseX=-9999, mouseY=-9999;
@@ -155,12 +116,21 @@ function resetDodge(){
   isFixed=false; noBtn=null; yesBtn=null;
 }
 
+/* 檢查兩個矩形是否重疊（含邊距） */
+function overlapsYes(left, top, w, h) {
+  if (!yesBtn) return false;
+  var yr = yesBtn.getBoundingClientRect();
+  var m = AVOID_MARGIN;
+  return !(left > yr.right + m || left + w < yr.left - m ||
+           top > yr.bottom + m || top + h < yr.top - m);
+}
+
 function computeTarget(){
   if(!noBtn) return;
   if(!isFixed){
-    const r=noBtn.getBoundingClientRect();
+    var r=noBtn.getBoundingClientRect();
     btnOrigX=Math.round(r.left); btnOrigY=Math.round(r.top);
-    const yr=yesBtn.getBoundingClientRect();
+    var yr=yesBtn.getBoundingClientRect();
     yesBtn.style.position='fixed';
     yesBtn.style.left=Math.round(yr.left)+'px';
     yesBtn.style.top=Math.round(yr.top)+'px';
@@ -171,65 +141,96 @@ function computeTarget(){
     currentTX=0;currentTY=0;targetTX=0;targetTY=0;
     isFixed=true;
   }
-  const br=noBtn.getBoundingClientRect();
-  const mx=mouseX,my=mouseY;
-  const cx=btnOrigX+currentTX+br.width/2, cy=btnOrigY+currentTY+br.height/2;
-  const vx=cx-mx, vy=cy-my, dist=Math.hypot(vx,vy);
+  var br=noBtn.getBoundingClientRect();
+  var bw=br.width, bh=br.height;
+  var mx=mouseX, my=mouseY;
+  var cx=btnOrigX+currentTX+bw/2, cy=btnOrigY+currentTY+bh/2;
+  var vx=cx-mx, vy=cy-my, dist=Math.hypot(vx,vy);
+
   if(dist<KEEP_DIST){
     escaped++;
-    let ux,uy;
-    if(dist===0){const a=Math.random()*Math.PI*2;ux=Math.cos(a);uy=Math.sin(a);}
+    var ux,uy;
+    if(dist===0){var a=Math.random()*Math.PI*2;ux=Math.cos(a);uy=Math.sin(a);}
     else{ux=vx/dist;uy=vy/dist;}
-    let dL=mx+ux*KEEP_DIST-br.width/2, dT=my+uy*KEEP_DIST-br.height/2;
-    dL=clamp(dL,0,window.innerWidth-br.width);
-    dT=clamp(dT,0,window.innerHeight-br.height);
+
+    var dL=mx+ux*KEEP_DIST-bw/2;
+    var dT=my+uy*KEEP_DIST-bh/2;
+    dL=clamp(dL,0,window.innerWidth-bw);
+    dT=clamp(dT,0,window.innerHeight-bh);
+
+    /* ★ 如果會跟 yes 按鈕重疊，嘗試其他方向 */
+    if(overlapsYes(dL,dT,bw,bh)){
+      var best=null, bestDist=0;
+      for(var i=0;i<12;i++){
+        var angle=i*Math.PI/6;
+        var tryL=mx+Math.cos(angle)*KEEP_DIST-bw/2;
+        var tryT=my+Math.sin(angle)*KEEP_DIST-bh/2;
+        tryL=clamp(tryL,0,window.innerWidth-bw);
+        tryT=clamp(tryT,0,window.innerHeight-bh);
+        if(!overlapsYes(tryL,tryT,bw,bh)){
+          var d=Math.hypot(tryL-mx,tryT-my);
+          if(d>bestDist){bestDist=d;best={l:tryL,t:tryT};}
+        }
+      }
+      if(best){dL=best.l;dT=best.t;}
+      else{
+        /* 所有方向都重疊就盡量往遠離 yes 的方向推 */
+        var yr2=yesBtn.getBoundingClientRect();
+        var ycx=yr2.left+yr2.width/2, ycy=yr2.top+yr2.height/2;
+        var awayX=dL+bw/2-ycx, awayY=dT+bh/2-ycy;
+        var ad=Math.hypot(awayX,awayY)||1;
+        dL=clamp(dL+awayX/ad*100,0,window.innerWidth-bw);
+        dT=clamp(dT+awayY/ad*100,0,window.innerHeight-bh);
+      }
+    }
+
     targetTX=dL-btnOrigX; targetTY=dT-btnOrigY;
   } else { targetTX=0; targetTY=0; }
 }
 
-window.addEventListener('mousemove',e=>{mouseX=e.clientX;mouseY=e.clientY;computeTarget();});
-window.addEventListener('touchmove',e=>{mouseX=e.touches[0].clientX;mouseY=e.touches[0].clientY;computeTarget();},{passive:true});
-window.addEventListener('touchstart',e=>{mouseX=e.touches[0].clientX;mouseY=e.touches[0].clientY;computeTarget();},{passive:true});
+window.addEventListener('mousemove',function(e){mouseX=e.clientX;mouseY=e.clientY;computeTarget();});
+window.addEventListener('touchmove',function(e){mouseX=e.touches[0].clientX;mouseY=e.touches[0].clientY;computeTarget();},{passive:true});
+window.addEventListener('touchstart',function(e){mouseX=e.touches[0].clientX;mouseY=e.touches[0].clientY;computeTarget();},{passive:true});
 
 (function animate(){
-  const ease=0.14;
+  var ease=0.14;
   currentTX+=(targetTX-currentTX)*ease;
   currentTY+=(targetTY-currentTY)*ease;
   if(Math.abs(targetTX-currentTX)<.3)currentTX=targetTX;
   if(Math.abs(targetTY-currentTY)<.3)currentTY=targetTY;
-  if(noBtn&&isFixed)noBtn.style.transform=`translate(${currentTX}px,${currentTY}px)`;
+  if(noBtn&&isFixed)noBtn.style.transform='translate('+currentTX+'px,'+currentTY+'px)';
   requestAnimationFrame(animate);
 })();
 
 function dots(n){
-  return `<div class="dots">${QS.map((_,i)=>`<span class="${i<n?'on':''}"></span>`).join('')}</div>`;
+  return '<div class="dots">'+QS.map(function(_,i){return '<span class="'+(i<n?'on':'')+'"></span>';}).join('')+'</div>';
 }
 
 function render(){
   if(cur>=QS.length) return finish();
-  const d=QS[cur];
+  var d=QS[cur];
   resetDodge();
   dialog.classList.add("fade");
 
-  setTimeout(()=>{
-    dialog.innerHTML=`
-      ${dots(cur)}
-      <h2>${d.q}</h2><div class="hint">${d.h}</div>
-      <div class="buttons">
-        <button class="btn agree" id="yesBtn">${d.y}</button>
-        <button class="btn disagree" id="noBtn" disabled tabindex="-1">${d.n}</button>
-      </div>`;
+  setTimeout(function(){
+    dialog.innerHTML=
+      dots(cur)+
+      '<h2>'+d.q+'</h2><div class="hint">'+d.h+'</div>'+
+      '<div class="buttons">'+
+        '<button class="btn agree" id="yesBtn">'+d.y+'</button>'+
+        '<button class="btn disagree" id="noBtn" disabled tabindex="-1">'+d.n+'</button>'+
+      '</div>';
     dialog.classList.remove("fade");
 
     yesBtn=document.getElementById("yesBtn");
     noBtn=document.getElementById("noBtn");
-    noBtn.addEventListener('click',e=>e.preventDefault());
+    noBtn.addEventListener('click',function(e){e.preventDefault();});
 
-    yesBtn.onclick=()=>{
+    yesBtn.onclick=function(){
       if(noBtn){noBtn.style.display='none';noBtn=null;}
       dialog.classList.add("fade");
-      setTimeout(()=>{
-        dialog.innerHTML=`${dots(cur+1)}<div class="reply">${d.r}</div>`;
+      setTimeout(function(){
+        dialog.innerHTML=dots(cur+1)+'<div class="reply">'+d.r+'</div>';
         dialog.classList.remove("fade");
         cur++;
         setTimeout(render,1200);
@@ -242,36 +243,36 @@ function finish(){
   modalEl.classList.add("hidden");
   document.getElementById("congrats").classList.remove("hidden");
   document.getElementById("tag").textContent=
-    `妳嘗試逃避了 ${escaped} 次，但最後還是全部承認了 😏`;
+    '妳嘗試逃避了 '+escaped+' 次，但最後還是全部承認了 😏';
   startFireworks();
 }
 
 function startFireworks(){
-  const canvas=document.getElementById("fireworks");
-  const ctx=canvas.getContext("2d");
+  var canvas=document.getElementById("fireworks");
+  var ctx=canvas.getContext("2d");
   function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
   resize(); window.addEventListener("resize",resize);
-  const particles=[];
+  var particles=[];
   function rnd(a,b){return a+Math.random()*(b-a);}
   function launch(x,y){
-    const hue=Math.floor(rnd(0,360));
-    for(let i=0;i<120;i++){
-      const spd=rnd(1,6),ang=rnd(0,Math.PI*2);
-      particles.push({x,y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,
-        life:rnd(60,120),hue,alpha:1});
+    var hue=Math.floor(rnd(0,360));
+    for(var i=0;i<120;i++){
+      var spd=rnd(1,6),ang=rnd(0,Math.PI*2);
+      particles.push({x:x,y:y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,
+        life:rnd(60,120),hue:hue,alpha:1});
     }
   }
-  let frames=0;
+  var frames=0;
   (function loop(){
     ctx.fillStyle="rgba(0,0,0,0.18)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
-    for(let i=particles.length-1;i>=0;i--){
-      const p=particles[i];
+    for(var i=particles.length-1;i>=0;i--){
+      var p=particles[i];
       p.x+=p.vx;p.y+=p.vy;p.vy+=0.04;
       p.life--;p.alpha*=0.997;
       if(p.life<=0||p.alpha<0.02){particles.splice(i,1);continue;}
       ctx.beginPath();
-      ctx.fillStyle=`hsla(${p.hue},90%,60%,${p.alpha})`;
+      ctx.fillStyle='hsla('+p.hue+',90%,60%,'+p.alpha+')';
       ctx.arc(p.x,p.y,2.2,0,Math.PI*2);
       ctx.fill();
     }
@@ -284,9 +285,9 @@ function startFireworks(){
 function startApp(){
   document.getElementById("startScreen").classList.add("hidden");
   modalEl.classList.remove("hidden");
-  const bgm=document.getElementById("bgm");
+  var bgm=document.getElementById("bgm");
   bgm.volume=0.5;
-  bgm.play().catch(()=>{});
+  bgm.play().catch(function(){});
   render();
 }
 </script>
