@@ -14,10 +14,30 @@
     color: #111;
   }
 
+  /* start screen */
+  .start-screen {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 20px;
+    background: linear-gradient(180deg, #222, #111);
+    color: #fff; z-index: 10000;
+    cursor: pointer;
+  }
+  .start-screen.hidden { display: none; }
+  .start-icon { font-size: 64px; animation: bounce 1.5s infinite; }
+  .start-text { font-size: 18px; opacity: .7; }
+  .start-hint { font-size: 13px; opacity: .4; }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  /* modal */
   .modal {
     position: fixed; inset: 0;
     display: flex; align-items: center; justify-content: center;
   }
+  .modal.hidden { display: none; }
   .dialog {
     background: var(--modal);
     padding: 30px 36px;
@@ -33,11 +53,12 @@
   .dialog .hint { font-size: 13px; color: #bbb; margin-bottom: 20px; }
   .dialog .reply { font-size: 20px; font-weight: 700; color: var(--accent); padding: 18px 0; }
 
+  /* dots */
   .dots { display: flex; gap: 5px; justify-content: center; margin-bottom: 14px; }
   .dots span { width: 7px; height: 7px; border-radius: 50%; background: #e0e0e0; display: inline-block; }
   .dots span.on { background: var(--accent); }
 
-  /* ── buttons：一左一右平衡 ── */
+  /* buttons */
   .buttons {
     display: flex; align-items: center;
     justify-content: center;
@@ -50,12 +71,12 @@
     white-space: nowrap;
   }
   .agree { background: var(--accent); color: #fff; }
-  /* ★ 不設 position:fixed，讓按鈕一開始待在卡片裡 */
   .disagree { background: #ddd; color: #333; }
   .disagree:disabled { pointer-events: none; opacity: .98; }
 
   .hidden { display: none; }
 
+  /* congrats */
   .congrats {
     position: fixed; inset: 0;
     display: flex; align-items: center; justify-content: center;
@@ -88,7 +109,19 @@
 </head>
 <body>
 
-<div class="modal" id="modal">
+<!-- 開始畫面 -->
+<div class="start-screen" id="startScreen" onclick="startApp()">
+  <div class="start-icon">💌</div>
+  <div class="start-text">有人想對妳說些話...</div>
+  <div class="start-hint">點一下開始</div>
+</div>
+
+<!-- 背景音樂：把 bgm.mp3 放在同一個資料夾 -->
+<audio id="bgm" loop>
+  <source src="bgm.mp3" type="audio/mpeg">
+</audio>
+
+<div class="modal hidden" id="modal">
   <div class="dialog" id="dialog"></div>
 </div>
 
@@ -113,6 +146,7 @@ let cur = 0, escaped = 0;
 const dialog = document.getElementById("dialog");
 const modalEl = document.getElementById("modal");
 
+/* ── smooth dodge ── */
 const CM = 96 / 2.54;
 const KEEP_DIST = 5 * CM;
 let btnOrigX = null, btnOrigY = null;
@@ -134,13 +168,11 @@ function resetDodge() {
 function computeTarget() {
   if (!noBtn) return;
 
-  /* ★ 第一次：讀取按鈕在卡片裡的自然位置，然後才切換成 fixed */
   if (!isFixed) {
     const r = noBtn.getBoundingClientRect();
     btnOrigX = Math.round(r.left);
     btnOrigY = Math.round(r.top);
 
-    /* 同時鎖住 agree 按鈕的位置，防止它跑掉 */
     const yr = yesBtn.getBoundingClientRect();
     yesBtn.style.position = 'fixed';
     yesBtn.style.left = Math.round(yr.left) + 'px';
@@ -290,7 +322,15 @@ function startFireworks() {
   })();
 }
 
-render();
+/* ── 點開始畫面後才啟動 ── */
+function startApp() {
+  document.getElementById("startScreen").classList.add("hidden");
+  modalEl.classList.remove("hidden");
+  const bgm = document.getElementById("bgm");
+  bgm.volume = 0.4;
+  bgm.play().catch(() => {});
+  render();
+}
 </script>
 </body>
 </html>
