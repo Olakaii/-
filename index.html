@@ -10,7 +10,7 @@
   html, body {
     height: 100%; margin: 0;
     font-family: 'Arial', 'Noto Sans TC', sans-serif;
-    background: url('bg.jpg') center bottom/contain no-repeat fixed #0a0a12;
+    background: url('bg.jpg') center bottom/cover no-repeat fixed #0a0a12;
     color: #111;
   }
 
@@ -79,6 +79,7 @@
     color: #fff;
   }
   .congrats.hidden { display: none !important; }
+  .congrats .sticker { width: 160px; z-index: 1; margin-bottom: 10px; }
   .congrats h1 { font-size: 56px; margin: 0 0 10px; text-shadow: 0 4px 16px rgba(0,0,0,.6); z-index: 1; }
   .congrats p { font-size: 16px; opacity: .8; z-index: 1; }
   .congrats .tag {
@@ -92,6 +93,7 @@
     .dialog { padding: 20px 22px; min-width: 85vw; }
     .dialog h2 { font-size: 18px; }
     .congrats h1 { font-size: 36px; }
+    .congrats .sticker { width: 120px; }
   }
 </style>
 </head>
@@ -110,6 +112,7 @@
 </div>
 
 <div class="congrats hidden" id="congrats">
+  <img class="sticker" src="sticker.gif" alt="">
   <h1>💕 Love youu mwah 💕</h1>
   <p>就知道妳想kaikai～每一題都逃不掉呢 😏</p>
   <div class="tag" id="tag"></div>
@@ -139,7 +142,6 @@ let cur = 0, escaped = 0;
 const dialog = document.getElementById("dialog");
 const modalEl = document.getElementById("modal");
 
-/* ── smooth dodge ── */
 const CM = 96/2.54, KEEP_DIST = 5*CM;
 let btnOrigX=null, btnOrigY=null;
 let currentTX=0, currentTY=0, targetTX=0, targetTY=0;
