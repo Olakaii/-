@@ -10,7 +10,7 @@
   html, body {
     height: 100%; margin: 0;
     font-family: 'Arial', 'Noto Sans TC', sans-serif;
-    background: linear-gradient(180deg, #222, #111);
+    background: url('bg.jpg') center/cover no-repeat fixed #111;
     color: #111;
   }
 
@@ -20,7 +20,7 @@
     display: flex; align-items: center; justify-content: flex-end;
     flex-direction: column; gap: 12px;
     padding-bottom: 15vh;
-    background: url('bg.jpg') center/cover no-repeat, #111;
+    background: transparent;
     color: #fff; z-index: 10000; cursor: pointer;
   }
   .start-screen.hidden { display: none; }
